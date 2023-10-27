@@ -1,0 +1,74 @@
+const int soundSensorPin = 8;
+const int blueLed = 10;
+const int greenLed = 11;
+
+bool soundDetected = false;
+unsigned long previousBeatTime = 0;
+unsigned long beatInterval = 0;
+int beatCount = 0;
+bool metronomeSync = true;
+bool isBlueOn = true;  
+
+const unsigned long ledOnTime = 200;
+
+void setup() {
+  pinMode(soundSensorPin, INPUT);
+  pinMode(blueLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+
+  digitalWrite(blueLed, LOW);
+  digitalWrite(greenLed, LOW);
+}
+
+void loop() {
+  int soundLevel = digitalRead(soundSensorPin);
+
+  if (beatCount < 8) {
+    if (soundLevel == HIGH && !soundDetected) {
+      soundDetected = true;
+
+      if (metronomeSync) {
+        unsigned long currentMillis = millis();
+        beatInterval = currentMillis - previousBeatTime;
+        previousBeatTime = currentMillis;
+      }
+
+      beatCount++;
+
+      delay(10);
+    }
+
+    if (soundDetected && soundLevel == LOW) {
+      soundDetected = false;
+    }
+  } else {
+  
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousBeatTime >= beatInterval) {
+      if (beatCount % 8 == 0 || beatCount % 8 == 1) {
+        digitalWrite(blueLed, HIGH);
+        digitalWrite(greenLed, LOW);
+      } else if (beatCount % 8 == 2 || beatCount % 8 == 3) {
+        digitalWrite(blueLed, LOW);
+        digitalWrite(greenLed, LOW);
+      } else if (beatCount % 8 == 4 || beatCount % 8 == 5) {
+        digitalWrite(blueLed, LOW);
+        digitalWrite(greenLed, HIGH);
+      } else {
+        digitalWrite(blueLed, LOW);
+        digitalWrite(greenLed, LOW);
+      }
+      beatCount++;
+
+      previousBeatTime = currentMillis;
+    }
+
+   
+    if (currentMillis - previousBeatTime >= ledOnTime) {
+      digitalWrite(blueLed, LOW);
+      digitalWrite(greenLed, LOW);
+    }
+
+    delay(1);  
+  }
+}

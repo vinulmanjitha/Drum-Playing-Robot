@@ -1,0 +1,87 @@
+const int soundSensorPin = 8;
+const int led1 = 10;
+const int led2 = 11;
+
+bool soundDetected = false;
+unsigned long previousBeatTime = 0;
+unsigned long beatInterval = 0;
+int beatCount = 0;
+bool metronomeSync = true;
+bool isLed1On = false;
+bool isLed2On = false;
+int pattern[] = {1, 1, 2, 1, 2, 2, 1, 2};
+int patternIndex = 0;
+
+const unsigned long ledOnTime = 200; 
+
+void setup() {
+  pinMode(soundSensorPin, INPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+}
+
+void loop() {
+  int soundLevel = digitalRead(soundSensorPin);
+
+  if (beatCount < 8) {
+    if (soundLevel == HIGH && !soundDetected) {
+      soundDetected = true;
+
+      if (metronomeSync) {
+        unsigned long currentMillis = millis();
+        beatInterval = currentMillis - previousBeatTime;
+        previousBeatTime = currentMillis;
+      }
+
+      beatCount++;
+
+      delay(10); 
+    }
+
+    if (soundDetected && soundLevel == LOW) {
+      soundDetected = false;
+    }
+  } else {
+    
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousBeatTime >= beatInterval) {
+      if (pattern[patternIndex] == 1) {
+        if (isLed1On) {
+          digitalWrite(led1, LOW);
+          isLed1On = false;
+        } else {
+          digitalWrite(led1, HIGH);
+          isLed1On = true;
+        }
+      } else if (pattern[patternIndex] == 2) {
+        if (isLed2On) {
+          digitalWrite(led2, LOW);
+          isLed2On = false;
+        } else {
+          digitalWrite(led2, HIGH);
+          isLed2On = true;
+        }
+      }
+      patternIndex = (patternIndex + 1) % 8;
+      beatCount++;
+
+      previousBeatTime = currentMillis;
+    }
+
+   
+    if (isLed1On && currentMillis - previousBeatTime >= ledOnTime) {
+      digitalWrite(led1, LOW);
+      isLed1On = false;
+    }
+
+    if (isLed2On && currentMillis - previousBeatTime >= ledOnTime) {
+      digitalWrite(led2, LOW);
+      isLed2On = false;
+    }
+
+    delay(1); 
+  }
+}
